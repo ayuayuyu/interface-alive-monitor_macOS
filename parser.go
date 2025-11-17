@@ -114,7 +114,7 @@ func parseAddressMessage(data []byte) {
 		family := int(p[1])
 
 		// sockaddr の実データをパース
-		_, ip := parseSockaddr(p)
+		ip := parseSockaddr(p, saLen, family)
 
 		if i == RTAX_IFA && ip != "" {
 			if ifa.IfamType == syscall.RTM_NEWADDR {
@@ -133,12 +133,12 @@ func parseAddressMessage(data []byte) {
 }
 
 // sockaddr を取り出して IP を返す
-func parseSockaddr(data []byte) (int, string) {
+func parseSockaddr(data []byte, saLen int, family int) string {
 	if len(data) < 2 {
-		return 0, ""
+		return ""
 	}
-	saLen := int(data[0])
-	family := int(data[1])
+	// saLen := int(data[0])
+	// family := int(data[1])
 
 	// fmt.Printf("saLen: %d , family: %d\n", saLen, family)
 	// fmt.Printf("data: %v\n", data)
@@ -147,13 +147,13 @@ func parseSockaddr(data []byte) (int, string) {
 	case syscall.AF_INET:
 		if saLen >= 8 && len(data) >= 8 {
 			ip := net.IPv4(data[4], data[5], data[6], data[7])
-			return saLen, ip.String()
+			return ip.String()
 		}
 	case syscall.AF_INET6:
 		if saLen >= 26 && len(data) >= 8+16 {
 			ip := net.IP(data[8 : 8+16])
-			return saLen, ip.String()
+			return ip.String()
 		}
 	}
-	return saLen, ""
+	return ""
 }
